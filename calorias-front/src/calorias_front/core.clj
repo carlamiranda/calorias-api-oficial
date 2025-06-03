@@ -50,21 +50,27 @@
    (http/post (str api-url "/limpar"))
    (println "Histórico apagado com sucesso."))
 
- (defn registrar-usuario [altura peso idade genero]
-   (http/post (str api-url "/usuario")
-              {:body (json/generate-string {:altura altura :peso peso :idade idade :genero genero})
-               :headers {"Content-Type" "application/json"}
-               :as :json}))
+ (defn registrar-usuario [username altura peso idade genero]
+  (http/post (str api-url "/usuario")
+             {:body (json/generate-string {:username username
+                                          :altura altura
+                                          :peso peso
+                                          :idade idade
+                                          :genero genero})
+              :headers {"Content-Type" "application/json"}
+              :as :json}))
+
 
  (defn buscar-usuario []
    (:body (http/get (str api-url "/usuario") {:as :json})))
 
  (defn apresentar-usuario [usuario]
-   (str "\nUsuário registrado: "
-        "Altura: " (:altura usuario) "cm, "
-        "Peso: " (:peso usuario) "kg, "
-        "Idade: " (:idade usuario) ", "
-        "Gênero: " (:genero usuario)))
+  (str "Usuário: " (:username usuario) ", "
+       "Altura: " (:altura usuario) "cm, "
+       "Peso: " (:peso usuario) "kg, "
+       "Idade: " (:idade usuario) ", "
+       "Gênero: " (:genero usuario)))
+
 
  (defn mostrar-usuario []
    (let [usuario (buscar-usuario)]
@@ -92,7 +98,19 @@
      (registrar-exercicio entrada peso altura idade genero)
      (registrar-alimento entrada)))
 
+(defn buscar-saldo-global-intervalo [data-inicio data-fim]
+  (-> (http/get (str api-url "/saldo/periodo/global")
+               {:query-params {"data-inicio" data-inicio
+                               "data-fim" data-fim}
+                :as :json})
+      :body))
 
+(defn buscar-transacoes-global-intervalo [data-inicio data-fim]
+  (-> (http/get (str api-url "/transacoes/periodo/global")
+               {:query-params {"data-inicio" data-inicio
+                               "data-fim" data-fim}
+                :as :json})
+      :body))
 
  (defn menu []
    (println "\n--- Menu ---")
@@ -102,12 +120,12 @@
    (println "4 - Limpar histórico")
    (println "5 - Mostrar usuário atual")
    (println "6 - Listar todos os usuários registrados")
-   (println "7 - Consultar saldo global por data (todos usuários)")
-   (println "8 - Consultar transações globais por data")
+   (println "7 - Consultar saldo global por período (todos usuários)")
+   (println "8 - Consultar transações globais por período (todos usuários)")
    (println "9 - Consultar saldo total global (todos usuários)")
    (println "10 - Sair"))
 
- (defn opcoes-menu [peso altura idade genero]
+ (defn opcoes-menu [username peso altura idade genero]
    (menu)
    (print "Escolha uma opção: ") (flush)
    (let [opcao (read-line)]
@@ -119,7 +137,7 @@
                               (take-while #(not (#{"finalizar" "Finalizar"} %))
                                           (repeatedly #(read-line))))))
          
-             (recur peso altura idade genero))
+             (recur username peso altura idade genero))
  
        "2" (do
              (let [dados (buscar-saldo)]
@@ -127,19 +145,19 @@
                (println (str "Consumidas: " (:consumidas dados)))
                (println (str "Gastas: " (:gastas dados)))
                (println (str "Saldo: " (:saldo dados))))
-             (recur peso altura idade genero))
+             (recur username peso altura idade genero))
  
        "3" (do
              (doall (map println (buscar-transacoes)))
-             (recur peso altura idade genero))
+             (recur username peso altura idade genero))
  
        "4" (do
              (limpar-transacoes)
-             (recur peso altura idade genero))
+             (recur username peso altura idade genero))
  
        "5" (do
              (mostrar-usuario)
-             (recur peso altura idade genero))
+             (recur username peso altura idade genero))
  
        "6" (do
              (let [usuarios (buscar-todos-usuarios)]
@@ -149,25 +167,31 @@
                                           " | Idade: " (:idade %)
                                           " | Gênero: " (:genero %)))
                            usuarios)))
-             (recur peso altura idade genero))
+             (recur username peso altura idade genero))
  
-       "7" (do
-             (let [data (do (println "Digite a data (yyyy-MM-dd):") (read-line))
-                   resultados (buscar-saldo-data-global data)]
-               (doall (map #(println (str "\nUsuário: " (:usuario %)
+      "7" (do
+            (println "Digite a data inicial (yyyy-MM-dd):")
+            (let [data-inicio (read-line)]
+              (println "Digite a data final (yyyy-MM-dd):")
+              (let [data-fim (read-line)
+                    resultados (buscar-saldo-global-intervalo data-inicio data-fim)]
+                (doall (map #(println (str "\nUsuário: " (:usuario %)
                                           "\nConsumidas: " (:consumidas %)
                                           "\nGastas: " (:gastas %)
                                           "\nSaldo: " (:saldo %)))
-                           resultados)))
-             (recur peso altura idade genero))
- 
-       "8" (do
-             (let [data (do (println "Digite a data (yyyy-MM-dd):") (read-line))
-                   resultados (buscar-transacoes-data-global data)]
-               (doall (map #(println (str "\nUsuário: " (:usuario %)
+                            resultados))))
+            (recur username peso altura idade genero))
+
+      "8" (do
+            (println "Digite a data inicial (yyyy-MM-dd):")
+            (let [data-inicio (read-line)]
+              (println "Digite a data final (yyyy-MM-dd):")
+              (let [data-fim (read-line)
+                    resultados (buscar-transacoes-global-intervalo data-inicio data-fim)]
+                (doall (map #(println (str "\nUsuário: " (:usuario %)
                                           "\nTransações: " (:transacoes %)))
-                           resultados)))
-             (recur peso altura idade genero))
+                            resultados))))
+            (recur username peso altura idade genero))
  
        "9" (do
              (let [resultados (buscar-saldo-total-global)]
@@ -176,7 +200,7 @@
                                           " | Gastas: " (:gastas %)
                                           " | Saldo: " (:saldo %)))
                            resultados)))
-             (recur peso altura idade genero))
+             (recur username peso altura idade genero))
  
        "10" (do
               (println "Encerrando.")
@@ -184,22 +208,22 @@
  
        (do
          (println "Opção inválida.")
-         (recur peso altura idade genero)))))
-
-
+         (recur username peso altura idade genero)))))
 
 (defn -main [& args]
   (println "Bem-vindo(a) ao Rastreador de Calorias")
 
-  (println "Digite seu peso (kg):")
-  (let [peso (Double/parseDouble (read-line))
-        _ (println "Digite sua altura (cm):")
+  (println "Digite o seu nome de usuário:")
+  (let [username (read-line)
+        _ (println "Digite o seu peso (kg):")
+        peso (Double/parseDouble (read-line))
+        _ (println "Digite a sua altura (cm):")
         altura (Integer/parseInt (read-line))
-        _ (println "Digite sua idade:")
+        _ (println "Digite a sua idade:")
         idade (Integer/parseInt (read-line))
-        _ (println "Digite seu gênero (male/female):")
+        _ (println "Digite o seu gênero (male/female):")
         genero (read-line)]
-
-    (registrar-usuario altura peso idade genero)
+    
+    (registrar-usuario username altura peso idade genero)
     (mostrar-usuario)
-    (opcoes-menu peso altura idade genero)))
+    (opcoes-menu username peso altura idade genero)))

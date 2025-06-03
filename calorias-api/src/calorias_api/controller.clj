@@ -67,14 +67,14 @@
 (defn handle-registrar-usuario [request]
   (try
     (let [dados (:body request)
-          {:keys [altura peso idade genero]} dados]
-      (if (and altura peso idade genero)
-        (do
-          (db/registrar-usuario dados)
-          {:status 200
-           :headers {"Content-Type" "application/json"}
-           :body (json/generate-string {:mensagem "O usuário foi registrado."
-                                       :usuario dados})})
+          {:keys [username altura peso idade genero]} dados]
+      (if (and username altura peso idade genero)
+        {:status 200
+         :headers {"Content-Type" "application/json"}
+         :body (json/generate-string
+                 (do (db/registrar-usuario dados)
+                     {:mensagem "O usuário foi registrado."
+                      :usuario dados}))}
         {:status 400
          :headers {"Content-Type" "application/json"}
          :body (json/generate-string {:erro "Os dados estão incompletos"})}))
@@ -88,3 +88,19 @@
     (response (db/obter-usuario))
     (catch Exception _
       {:status 500 :body "Erro ao obter usuário"})))
+
+(defn handle-transacoes-intervalo [request]
+  (let [params (:query-params request)
+        data-inicio (get params "data-inicio")
+        data-fim (get params "data-fim")]
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (json/generate-string (db/transacoes-por-periodo-global data-inicio data-fim))}))
+
+(defn handle-saldo-intervalo [request]
+  (let [params (:query-params request)
+        data-inicio (get params "data-inicio")
+        data-fim (get params "data-fim")]
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (json/generate-string (db/saldo-por-periodo-global data-inicio data-fim))}))

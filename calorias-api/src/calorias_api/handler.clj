@@ -18,6 +18,8 @@
   (POST "/usuario" request (ctrl/handle-registrar-usuario request))
   (GET "/usuarios" [] (ctrl/handle-listar-usuarios))
   (GET "/usuario" [] (ctrl/handle-obter-usuario))
+  (GET "/transacoes/periodo/global" request (ctrl/handle-transacoes-intervalo request))
+  (GET "/saldo/periodo/global" request (ctrl/handle-saldo-intervalo request))
 
   (route/not-found "404 - Recurso não encontrado"))
 
