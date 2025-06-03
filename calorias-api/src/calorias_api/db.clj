@@ -26,13 +26,12 @@
 
 (carregar)
 
-
 (defn registrar-usuario [dados]
   (let [id (gerar-id-usuario dados)]
     (reset! usuario-ativo (assoc dados :id id))
     (when-not (contains? @banco id)
       (swap! banco assoc id {:dados (assoc dados :id id)
-                             :transacoes []}))
+                             :transacoes '()})) ;; LISTA aqui
     (salvar)))
 
 (defn obter-usuario []
@@ -50,9 +49,8 @@
 
 (defn limpar []
   (let [id (:id @usuario-ativo)]
-    (swap! banco assoc-in [id :transacoes] [])
+    (swap! banco assoc-in [id :transacoes] '())
     (salvar)))
-
 
 (defn- exercicio? [transacao]
   (= (:tipo transacao) "exercicio"))
@@ -66,7 +64,6 @@
         gastas (reduce + 0 (map :valor (filter exercicio? ts)))
         saldo (- consumidas gastas)]
     {:consumidas consumidas :gastas gastas :saldo saldo}))
-
 
 (defn transacoes-por-data-global [data]
   (for [[id {:keys [dados transacoes]}] @banco

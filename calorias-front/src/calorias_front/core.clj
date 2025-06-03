@@ -70,7 +70,6 @@
    (let [usuario (buscar-usuario)]
      (println (apresentar-usuario usuario))))
 
- ;; ====== Registro de transações ======
 
  (defn registrar-exercicio [entrada peso altura idade genero]
    (let [[exercicio tempo-str] (str/split entrada #" ")
@@ -93,7 +92,7 @@
      (registrar-exercicio entrada peso altura idade genero)
      (registrar-alimento entrada)))
 
- ;; ====== Menu principal ======
+
 
  (defn menu []
    (println "\n--- Menu ---")
@@ -118,53 +117,76 @@
              (doall (map println
                          (map #(registrar % peso altura idade genero)
                               (take-while #(not (#{"finalizar" "Finalizar"} %))
-                                          (repeatedly #(read-line)))))))
+                                          (repeatedly #(read-line))))))
+         
+             (recur peso altura idade genero))
+ 
+       "2" (do
+             (let [dados (buscar-saldo)]
+               (println "\nSaldo total atual:")
+               (println (str "Consumidas: " (:consumidas dados)))
+               (println (str "Gastas: " (:gastas dados)))
+               (println (str "Saldo: " (:saldo dados))))
+             (recur peso altura idade genero))
+ 
+       "3" (do
+             (doall (map println (buscar-transacoes)))
+             (recur peso altura idade genero))
+ 
+       "4" (do
+             (limpar-transacoes)
+             (recur peso altura idade genero))
+ 
+       "5" (do
+             (mostrar-usuario)
+             (recur peso altura idade genero))
+ 
+       "6" (do
+             (let [usuarios (buscar-todos-usuarios)]
+               (println "\nUsuários registrados:")
+               (doall (map #(println (str "\nAltura: " (:altura %)
+                                          " | Peso: " (:peso %)
+                                          " | Idade: " (:idade %)
+                                          " | Gênero: " (:genero %)))
+                           usuarios)))
+             (recur peso altura idade genero))
+ 
+       "7" (do
+             (let [data (do (println "Digite a data (yyyy-MM-dd):") (read-line))
+                   resultados (buscar-saldo-data-global data)]
+               (doall (map #(println (str "\nUsuário: " (:usuario %)
+                                          "\nConsumidas: " (:consumidas %)
+                                          "\nGastas: " (:gastas %)
+                                          "\nSaldo: " (:saldo %)))
+                           resultados)))
+             (recur peso altura idade genero))
+ 
+       "8" (do
+             (let [data (do (println "Digite a data (yyyy-MM-dd):") (read-line))
+                   resultados (buscar-transacoes-data-global data)]
+               (doall (map #(println (str "\nUsuário: " (:usuario %)
+                                          "\nTransações: " (:transacoes %)))
+                           resultados)))
+             (recur peso altura idade genero))
+ 
+       "9" (do
+             (let [resultados (buscar-saldo-total-global)]
+               (doall (map #(println (str "\nUsuário: " (:usuario %)
+                                          "\nConsumidas: " (:consumidas %)
+                                          " | Gastas: " (:gastas %)
+                                          " | Saldo: " (:saldo %)))
+                           resultados)))
+             (recur peso altura idade genero))
+ 
+       "10" (do
+              (println "Encerrando.")
+              (System/exit 0))
+ 
+       (do
+         (println "Opção inválida.")
+         (recur peso altura idade genero)))))
 
-       "2" (let [dados (buscar-saldo)]
-             (println "\nSaldo total atual:")
-             (println (str "Consumidas: " (:consumidas dados)))
-             (println (str "Gastas: " (:gastas dados)))
-             (println (str "Saldo: " (:saldo dados))))
 
-     "3" (doall (map println (buscar-transacoes)))
-
-     "4" (limpar-transacoes)
-
-     "5" (mostrar-usuario)
-
-     "6" (let [usuarios (buscar-todos-usuarios)]
-           (println "\nUsuários registrados:")
-           (doall (map #(println (str "\nAltura: " (:altura %)
-                                      " | Peso: " (:peso %)
-                                      " | Idade: " (:idade %)
-                                      " | Gênero: " (:genero %)))
-                       usuarios)))
-
-     "7" (let [data (do (println "Digite a data (yyyy-MM-dd):") (read-line))
-               resultados (buscar-saldo-data-global data)]
-           (doall (map #(println (str "\nUsuário: " (:usuario %)
-                                      "\nConsumidas: " (:consumidas %)
-                                      "\nGastas: " (:gastas %)
-                                      "\nSaldo: " (:saldo %)))
-                       resultados)))
-
-     "8" (let [data (do (println "Digite a data (yyyy-MM-dd):") (read-line))
-               resultados (buscar-transacoes-data-global data)]
-           (doall (map #(println (str "\nUsuário: " (:usuario %)
-                                      "\nTransações: " (:transacoes %)))
-                       resultados)))
-
-     "9" (let [resultados (buscar-saldo-total-global)]
-           (doall (map #(println (str "\nUsuário: " (:usuario %)
-                                      "\nConsumidas: " (:consumidas %)
-                                      " | Gastas: " (:gastas %)
-                                      " | Saldo: " (:saldo %)))
-                       resultados)))
-
-     "10" (do (println "Encerrando.") (System/exit 0))
-
-     (println "Opção inválida."))))
-;; ====== Entrada principal ======
 
 (defn -main [& args]
   (println "Bem-vindo(a) ao Rastreador de Calorias")
