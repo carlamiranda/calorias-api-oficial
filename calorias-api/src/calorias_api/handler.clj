@@ -7,8 +7,8 @@
 
 (defroutes rotas
   (GET "/" [] "API de calorias está online.")
-  (GET "/alimento" [nome] (ctrl/handle-alimento nome))
-  (GET "/exercicio" [nome peso tempo altura idade genero] (ctrl/handle-exercicio nome peso tempo altura idade genero))
+  (GET "/alimento" [nome data] (ctrl/handle-alimento nome data))
+  (GET "/exercicio" [nome peso tempo altura idade genero data] (ctrl/handle-exercicio nome peso tempo altura idade genero data))
   (GET "/transacoes/data/global" [data] (ctrl/handle-transacoes-global data))
   (GET "/saldo/data/global" [data] (ctrl/handle-saldo-data-global data))
   (GET "/saldo/global" [] (ctrl/handle-saldo-total-global))
@@ -20,6 +20,8 @@
   (GET "/usuario" [] (ctrl/handle-obter-usuario))
   (GET "/transacoes/periodo/global" request (ctrl/handle-transacoes-intervalo request))
   (GET "/saldo/periodo/global" request (ctrl/handle-saldo-intervalo request))
+  (GET "/transacoes/periodo/usuario" request (ctrl/handle-transacoes-periodo-usuario request))
+  (GET "/saldo/periodo/usuario" request (ctrl/handle-saldo-periodo-usuario request))
 
   (route/not-found "404 - Recurso não encontrado"))
 

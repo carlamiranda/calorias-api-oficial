@@ -35,19 +35,20 @@
     (db/limpar)
     (response {:mensagem "Transações apagadas."})))
 
-(defn handle-alimento [nome]
+(defn handle-alimento [nome data]
   (try
     (let [resultado (svc/buscar-alimento nome)
           transacao (db/registrar {:tipo "alimento"
                                    :nome nome
-                                   :valor (:calorias resultado)})]
+                                   :valor (:calorias resultado)
+                                   :data data})]
       {:status 200
        :headers {"Content-Type" "application/json"}
        :body (json/generate-string transacao)})
     (catch Exception _
       {:status 400 :body "Erro ao buscar alimento"})))
 
-(defn handle-exercicio [nome peso tempo altura idade genero]
+(defn handle-exercicio [nome peso tempo altura idade genero data]
   (try
     (let [p (Double/parseDouble peso)
           t (Integer/parseInt tempo)
@@ -57,7 +58,8 @@
           transacao (db/registrar {:tipo "exercicio"
                                    :nome nome
                                    :tempo t
-                                   :valor (:gasto resultado)})]
+                                   :valor (:gasto resultado)
+                                   :data data})]
       {:status 200
        :headers {"Content-Type" "application/json"}
        :body (json/generate-string transacao)})
@@ -104,3 +106,19 @@
     {:status 200
      :headers {"Content-Type" "application/json"}
      :body (json/generate-string (db/saldo-por-periodo-global data-inicio data-fim))}))
+
+(defn handle-transacoes-periodo-usuario [request]
+  (let [params (:query-params request)
+        data-inicio (get params "data-inicio")
+        data-fim (get params "data-fim")]
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (json/generate-string (db/transacoes-por-periodo-usuario data-inicio data-fim))}))
+
+(defn handle-saldo-periodo-usuario [request]
+  (let [params (:query-params request)
+        data-inicio (get params "data-inicio")
+        data-fim (get params "data-fim")]
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (json/generate-string (db/saldo-por-periodo-usuario data-inicio data-fim))}))
