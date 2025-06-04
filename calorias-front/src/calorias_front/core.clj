@@ -114,16 +114,16 @@
 
  (defn menu []
    (println "\n--- Menu ---")
-   (println "1 - Adicionar alimento ou exercício")
-   (println "2 - Ver saldo total")
-   (println "3 - Ver histórico de transações")
-   (println "4 - Limpar histórico")
+   (println "1 - Registrar alimento ou exercício")
+   (println "2 - Ver saldo total de calorias (usuário atual)")
+   (println "3 - Ver histórico de transações (usuário atual)")
+   (println "4 - Limpar histórico (usuário atual)")
    (println "5 - Mostrar usuário atual")
    (println "6 - Listar todos os usuários registrados")
-   (println "7 - Consultar saldo global por período (todos usuários)")
-   (println "8 - Consultar transações globais por período (todos usuários)")
-   (println "9 - Consultar saldo total global (todos usuários)")
-   (println "10 - Sair"))
+   (println "7 - Consultar saldo global por período (todos os usuários)")
+   (println "8 - Consultar transações globais por período (todos os usuários)")
+   (println "9 - Consultar saldo total global (todos os usuários)")
+   (println "10 - Sair do sistema"))
 
  (defn opcoes-menu [username peso altura idade genero]
    (menu)
@@ -162,7 +162,8 @@
        "6" (do
              (let [usuarios (buscar-todos-usuarios)]
                (println "\nUsuários registrados:")
-               (doall (map #(println (str "\nAltura: " (:altura %)
+               (doall (map #(println (str "\nUsuário: " (:username %)
+                                          " |Altura: " (:altura %)
                                           " | Peso: " (:peso %)
                                           " | Idade: " (:idade %)
                                           " | Gênero: " (:genero %)))
@@ -170,17 +171,21 @@
              (recur username peso altura idade genero))
  
       "7" (do
-            (println "Digite a data inicial (yyyy-MM-dd):")
-            (let [data-inicio (read-line)]
-              (println "Digite a data final (yyyy-MM-dd):")
-              (let [data-fim (read-line)
-                    resultados (buscar-saldo-global-intervalo data-inicio data-fim)]
-                (doall (map #(println (str "\nUsuário: " (:usuario %)
-                                          "\nConsumidas: " (:consumidas %)
-                                          "\nGastas: " (:gastas %)
-                                          "\nSaldo: " (:saldo %)))
-                            resultados))))
-            (recur username peso altura idade genero))
+      (println "Digite a data inicial (yyyy-MM-dd):")
+      (let [data-inicio (read-line)]
+        (println "Digite a data final (yyyy-MM-dd):")
+        (let [data-fim (read-line)
+              resultados (buscar-saldo-global-intervalo data-inicio data-fim)]
+          (doall
+            (map (fn [r]
+                   (let [usuario (:usuario r)
+                         nome (:username usuario)]
+                     (println (str "\nUsuário: " nome
+                                   "\nConsumidas: " (:consumidas r)
+                                   "\nGastas: " (:gastas r)
+                                   "\nSaldo: " (:saldo r)))))
+                 resultados))))
+      (recur username peso altura idade genero))
 
       "8" (do
             (println "Digite a data inicial (yyyy-MM-dd):")
